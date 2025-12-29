@@ -1,4 +1,5 @@
 using BepInEx;
+using BepInEx.Configuration;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
@@ -8,21 +9,56 @@ public class TimerDisplay
 {
     private GameObject canvas;
 
-    // private GameObject textObject;
     private Text text;
     private Text pbText;
     private Font theFont;
 
     private bool timerVisible = true;
 
+    private ConfigEntry<int> timerTextSize;
+    private ConfigEntry<int> pbTextSize;
+
+    private ConfigEntry<Vector2> timerTextPos;
+    private ConfigEntry<Vector2> pbTextPos;
+
     public TimerDisplay()
     {
-        // find font
+        setupConfig();
+
         var allFonts = Resources.FindObjectsOfTypeAll<Font>();
         theFont = allFonts.FirstOrDefault(x => x.name == "TrajanPro-Regular");
 
-        Console.WriteLine($"Timer Mod, fonts found: {allFonts.Length}");
+        setupCanvas();
 
+        text = createText("TimerText", "0:00.00", timerTextSize.Value, timerTextPos.Value, new Vector2(0f, 0f));
+        pbText = createText("TimerPBText", "PB: 0:00.00", pbTextSize.Value, pbTextPos.Value, new Vector2(0f, 0f));
+    }
+
+    private void setAllConfigs()
+    {
+        text.fontSize = timerTextSize.Value;
+        pbText.fontSize = pbTextSize.Value;
+
+        updateTextAnchorMin(text, timerTextPos.Value);
+        updateTextAnchorMin(pbText, pbTextPos.Value);
+    }
+
+    private void setupConfig()
+    {
+        ConfigFile config = silksong_timer.silksong_timer.config;
+        timerTextSize = config.Bind("UI", "Timer Text Size", 60, "");
+        pbTextSize = config.Bind("UI", "Pb Text Size", 30, "");
+        timerTextPos = config.Bind("UI", "Timer Text Position", new Vector2(0.95f, 0.9f), "");
+        pbTextPos = config.Bind("UI", "Pb Text Position", new Vector2(0.95f, 0.8f), "");
+
+        timerTextSize.SettingChanged += (_, _) => {setAllConfigs();};
+        pbTextSize.SettingChanged += (_, _) => {setAllConfigs();};
+        timerTextPos.SettingChanged += (_, _) => {setAllConfigs();};
+        pbTextPos.SettingChanged += (_, _) => {setAllConfigs();};
+    }
+
+    private void setupCanvas()
+    {
         canvas = new GameObject("TimerModCanvas");
         var canvasC = canvas.AddComponent<UnityEngine.Canvas>();
         canvasC.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -40,11 +76,7 @@ public class TimerDisplay
         canvasRect.anchorMax = new Vector2(1, 1);
         canvasRect.sizeDelta = new Vector2(0, 0);
 
-        text = createText("TimerText", "0:00.00", 70, new Vector2(0.95f, 0.9f), new Vector2(0.8f, 0.8f));
-        pbText = createText("TimerPBText", "PB: 0:00.00", 40, new Vector2(0.95f, 0.8f), new Vector2(0.7f, 0.7f));
-
         UnityEngine.Object.DontDestroyOnLoad(canvas);
-        // UnityEngine.Object.DontDestroyOnLoad(textObject);
     }
 
     public Text createText(string name, string defaultText, int fontSize, Vector2 anchorMax, Vector2 anchorMin)
@@ -72,6 +104,12 @@ public class TimerDisplay
         textTransform.anchorMin = anchorMin;
 
         return text;
+    }
+
+    private void updateTextAnchorMin(Text t, Vector2 anchorMax)
+    {
+        RectTransform transform = t.gameObject.GetComponent<RectTransform>();
+        transform.anchorMax = anchorMax;
     }
 
     public void toggleVisibility()

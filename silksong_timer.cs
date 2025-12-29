@@ -32,9 +32,12 @@ public class Keybinds
     }
 }
 
+[BepInDependency(DependencyGUID: "org.silksong-modding.modlist")]
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
 public class silksong_timer : BaseUnityPlugin
 {
+    public static ConfigFile config;
+
     private TimerDisplay timerDisplay;
 
     private const string MENU_TITLE = "Menu_Title";
@@ -251,6 +254,7 @@ public class silksong_timer : BaseUnityPlugin
     {
         SceneManager.activeSceneChanged += onActiveSceneChanged;
         keybinds = new Keybinds(Config);
+        config = Config;
         Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} has loaded!");
     }
 }
