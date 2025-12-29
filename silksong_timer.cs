@@ -61,6 +61,9 @@ public class silksong_timer : BaseUnityPlugin
 
     private int funSceneCount = 0;
 
+    private ConfigEntry<bool> showSpeed;
+    private float startPosX;
+
     private bool ShouldTickTimer()
     {
         if (timerPaused)
@@ -136,6 +139,10 @@ public class silksong_timer : BaseUnityPlugin
 
     private void endTimer()
     {
+        float endPosX = HeroController.instance.gameObject.transform.position.x;
+        float diff = Math.Abs(startPosX - endPosX);
+        double speed = diff / time;
+
         history[history_num] = time;
         history_num += 1;
         history_num %= 5;
@@ -145,7 +152,10 @@ public class silksong_timer : BaseUnityPlugin
         {
             pb = time;
             // Logger.LogInfo($"Got a pb: {getTimeText(time)}");
+
             timerDisplay.setPbTime(getTimeText(pb));
+            if (showSpeed.Value)
+                timerDisplay.setPbTime($"{getTimeText(pb)}, {speed:0.00} u/s");
         }
         timerPaused = true;
     }
@@ -154,6 +164,8 @@ public class silksong_timer : BaseUnityPlugin
     {
         time = 0;
         timerPaused = false;
+
+        startPosX = HeroController.instance.gameObject.transform.position.x;
 
         Logger.LogInfo("Started timer");
     }
@@ -255,6 +267,8 @@ public class silksong_timer : BaseUnityPlugin
         SceneManager.activeSceneChanged += onActiveSceneChanged;
         keybinds = new Keybinds(Config);
         config = Config;
+
+        showSpeed = Config.Bind("UI", "Show Speed", false, "");
         Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} has loaded!");
     }
 }
