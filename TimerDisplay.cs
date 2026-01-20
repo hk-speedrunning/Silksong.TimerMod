@@ -48,10 +48,10 @@ public class TimerDisplay
     private void setupConfig()
     {
         ConfigFile config = TimerMod.config;
-        timerTextSize = config.Bind("UI", "Timer Text Size", 60, "");
-        pbTextSize = config.Bind("UI", "Pb Text Size", 30, "");
-        timerTextPos = config.Bind("UI", "Timer Text Position", new Vector2(0.95f, 0.9f), "");
-        pbTextPos = config.Bind("UI", "Pb Text Position", new Vector2(0.95f, 0.8f), "");
+        timerTextSize = config.Bind("UI", "Timer Text Size", 50, "");
+        pbTextSize = config.Bind("UI", "Pb Text Size", 25, "");
+        timerTextPos = config.Bind("UI", "Timer Text Position", new Vector2(0.05f, 0.00f), "");
+        pbTextPos = config.Bind("UI", "Pb Text Position", new Vector2(0.07f, 0.04f), "");
 
         timerTextSize.SettingChanged += (_, _) => {setAllConfigs();};
         pbTextSize.SettingChanged += (_, _) => {setAllConfigs();};
