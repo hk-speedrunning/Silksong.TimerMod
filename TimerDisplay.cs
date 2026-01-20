@@ -5,6 +5,8 @@ using UnityEngine.UI;
 using System;
 using System.Linq;
 
+namespace TimerMod;
+
 public class TimerDisplay
 {
     private GameObject canvas;
@@ -45,7 +47,7 @@ public class TimerDisplay
 
     private void setupConfig()
     {
-        ConfigFile config = silksong_timer.silksong_timer.config;
+        ConfigFile config = TimerMod.config;
         timerTextSize = config.Bind("UI", "Timer Text Size", 60, "");
         pbTextSize = config.Bind("UI", "Pb Text Size", 30, "");
         timerTextPos = config.Bind("UI", "Timer Text Position", new Vector2(0.95f, 0.9f), "");

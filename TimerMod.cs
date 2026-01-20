@@ -6,7 +6,7 @@ using BepInEx.Configuration;
 using GlobalEnums;
 using System;
 
-namespace silksong_timer;
+namespace TimerMod;
 
 public class Keybinds
 {
@@ -33,8 +33,8 @@ public class Keybinds
 }
 
 [BepInDependency(DependencyGUID: "org.silksong-modding.modlist")]
-[BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
-public class silksong_timer : BaseUnityPlugin
+[BepInAutoPlugin(id: "io.github.hk-speedrunning.timermod")]
+public partial class TimerMod : BaseUnityPlugin
 {
     public static ConfigFile config;
 
@@ -43,8 +43,8 @@ public class silksong_timer : BaseUnityPlugin
     private const string MENU_TITLE = "Menu_Title";
     private const string QUIT_TO_MENU = "Quit_To_Menu";
 
-    private Trigger startTrigger = new SceneTrigger("");
-    private Trigger endTrigger = new SceneTrigger("");
+    private Triggers.Trigger startTrigger = new Triggers.SceneTrigger("");
+    private Triggers.Trigger endTrigger = new Triggers.SceneTrigger("");
 
     private Keybinds keybinds;
     private bool usingSceneTriggers = false;
@@ -62,7 +62,7 @@ public class silksong_timer : BaseUnityPlugin
     private int funSceneCount = 0;
 
     private ConfigEntry<bool> showSpeed;
-    private float startPosX;
+    private Vector2 startPos;
 
     private bool ShouldTickTimer()
     {
@@ -139,9 +139,9 @@ public class silksong_timer : BaseUnityPlugin
 
     private void endTimer()
     {
-        float endPosX = HeroController.instance.gameObject.transform.position.x;
-        float diff = Math.Abs(startPosX - endPosX);
-        double speed = diff / time;
+        Vector2 endPos = HeroController.instance.gameObject.transform.position;
+        double speedx = Math.Abs(startPos.x - endPos.x) / time;
+        double speedy = Math.Abs(startPos.y - endPos.y) / time;
 
         history[history_num] = time;
         history_num += 1;
@@ -155,7 +155,7 @@ public class silksong_timer : BaseUnityPlugin
 
             timerDisplay.setPbTime(getTimeText(pb));
             if (showSpeed.Value)
-                timerDisplay.setPbTime($"{getTimeText(pb)}, {speed:0.00} u/s");
+                timerDisplay.setPbTime($"{getTimeText(pb)}\n{speedx:0.00} u/s, {speedy:0.00} u/s");
         }
         timerPaused = true;
     }
@@ -165,7 +165,7 @@ public class silksong_timer : BaseUnityPlugin
         time = 0;
         timerPaused = false;
 
-        startPosX = HeroController.instance.gameObject.transform.position.x;
+        startPos = HeroController.instance.gameObject.transform.position;
 
         Logger.LogInfo("Started timer");
     }
@@ -189,12 +189,12 @@ public class silksong_timer : BaseUnityPlugin
 
             if (usingSceneTriggers)
             {
-                startTrigger = new SceneTrigger(SceneManager.GetActiveScene().name);
+                startTrigger = new Triggers.SceneTrigger(SceneManager.GetActiveScene().name);
                 Logger.LogInfo("Set start scene");
             }
             else
             {
-                startTrigger = new CollisionTrigger(GameManager.instance.hero_ctrl.transform.position,
+                startTrigger = new Triggers.CollisionTrigger(GameManager.instance.hero_ctrl.transform.position,
                         new Vector2(0.35f, 0.35f), new Color(0.1f, 0.4f, 0.1f));
                 Logger.LogInfo("Set start pos");
             }
@@ -206,12 +206,12 @@ public class silksong_timer : BaseUnityPlugin
 
             if (usingSceneTriggers)
             {
-                endTrigger = new SceneTrigger(SceneManager.GetActiveScene().name);
+                endTrigger = new Triggers.SceneTrigger(SceneManager.GetActiveScene().name);
                 Logger.LogInfo("Set end scene");
             }
             else
             {
-                endTrigger = new CollisionTrigger(GameManager.instance.hero_ctrl.transform.position,
+                endTrigger = new Triggers.CollisionTrigger(GameManager.instance.hero_ctrl.transform.position,
                         new Vector2(0.35f, 0.35f), new Color(0.4f, 0.1f, 0.1f));
                 Logger.LogInfo("Set end pos");
             }
@@ -269,7 +269,7 @@ public class silksong_timer : BaseUnityPlugin
         config = Config;
 
         showSpeed = Config.Bind("UI", "Show Speed", false, "");
-        Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} has loaded!");
+        Logger.LogInfo($"Plugin {Name} ({Id}) has loaded!");
     }
 }
 

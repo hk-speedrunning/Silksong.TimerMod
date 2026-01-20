@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using System;
 
+namespace TimerMod.Triggers;
+
 public class CollisionTrigger : Trigger
 {
     private bool shouldActivate = false;

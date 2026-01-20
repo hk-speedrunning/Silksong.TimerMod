@@ -1,5 +1,7 @@
 using UnityEngine;
 
+namespace TimerMod.Triggers;
+
 public class SceneTrigger : Trigger
 {
     private string targetSceneName;
