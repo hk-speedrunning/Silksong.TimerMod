@@ -17,7 +17,7 @@ on:
         required: true
         default: false
         type: boolean
-    
+
 permissions:
   contents: write
   id-token: write
@@ -46,7 +46,7 @@ jobs:
     - name: Get Version
       id: version
       run: |-
-        VERSION=$(dotnet build Silksong.TimerMod.csproj -getProperty:Version)
+        VERSION=$(dotnet build TimerMod.csproj -getProperty:Version)
         echo Version is $VERSION
         echo "version=$VERSION" >> $GITHUB_OUTPUT
     - name: Upload thunderstore artifact
@@ -122,14 +122,14 @@ jobs:
   release-nuget:
     needs:
       - build
-      - secret-check 
+      - secret-check
     runs-on: ubuntu-latest
     if: |
-      needs.secret-check.outputs.has-nuget-secret == 'true' && 
+      needs.secret-check.outputs.has-nuget-secret == 'true' &&
       (
         (
-          github.event_name == 'push' && 
-          needs.build.outputs.allow-release == 'true' && 
+          github.event_name == 'push' &&
+          needs.build.outputs.allow-release == 'true' &&
           needs.build.outputs.is-new-version == 'true'
         ) ||
         (
