@@ -1,18 +1,13 @@
 # TimerMod
 
-A mod to time things in Silksong
+A simple trigger-based timer for Silksong.
 
 ## Usage
 
-Toggle between timing methods (by scene or by trigger) (f10 by default)
+- F8: Set start trigger/scene
+- F9: Set end trigger/scene
+- F10: Toggle between scene timing & trigger timing.
 
-Set start trigger (f8 by default)
+## Settings
 
-Set end trigger (f7 by default)
-
-These can be edited in the settings file, in the in the steam folder for Silksong: `.../common/Hollow Knight Silksong/BepInEx/config/io.github.hk-speedrunning.timermod.cfg`
-
-The visibility, position, and size of the UI can be also changed in the settings file.
-
-These can also be changed using the `BepInExConfigurationManager` while in-game.
-
+Keybinds & the UI position/size/visibility can be edited in the BepInEx config. This can be accessed in-game using `BepInExConfigurationManager`, through installers like Gale or r2ModMan, or in the config file at `<game files>/BepInEx/config/io.github.hk-speedrunning.timermod.cfg`.
