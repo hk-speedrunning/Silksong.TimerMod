@@ -3,7 +3,7 @@ schemaVersion = "0.0.1"
 
 [package]
 # The name of the team you are publishing as
-namespace = "hk-speedrunning"
+namespace = "hk_speedrunning"
 # max 250 characters
 description = "A simple trigger-based timer for Silksong."
 
