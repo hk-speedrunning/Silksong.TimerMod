@@ -25,15 +25,15 @@ public class TimerDisplay
 
     public TimerDisplay()
     {
-        setupConfig();
-
         var allFonts = Resources.FindObjectsOfTypeAll<Font>();
         theFont = allFonts.FirstOrDefault(x => x.name == "TrajanPro-Regular");
 
         setupCanvas();
 
-        text = createText("TimerText", "0:00.00", timerTextSize.Value, timerTextPos.Value, new Vector2(0f, 0f));
-        pbText = createText("TimerPBText", "PB: 0:00.00", pbTextSize.Value, pbTextPos.Value, new Vector2(0f, 0f));
+        setupConfig();
+
+        text = createText("TimerText", "0:00.00", timerTextSize.Value, timerTextPos.Value);
+        pbText = createText("TimerPBText", "PB: 0:00.00", pbTextSize.Value, pbTextPos.Value);
     }
 
     private void setAllConfigs()
@@ -41,8 +41,11 @@ public class TimerDisplay
         text.fontSize = timerTextSize.Value;
         pbText.fontSize = pbTextSize.Value;
 
-        updateTextAnchorMin(text, timerTextPos.Value);
-        updateTextAnchorMin(pbText, pbTextPos.Value);
+        if (text == null || pbText == null)
+            return;
+
+        updateTextPos(text, timerTextPos.Value);
+        updateTextPos(pbText, pbTextPos.Value);
     }
 
     private void setupConfig()
@@ -81,7 +84,7 @@ public class TimerDisplay
         UnityEngine.Object.DontDestroyOnLoad(canvas);
     }
 
-    public Text createText(string name, string defaultText, int fontSize, Vector2 anchorMax, Vector2 anchorMin)
+    public Text createText(string name, string defaultText, int fontSize, Vector2 position)
     {
         GameObject textObject = new GameObject(name);
         textObject.layer = LayerMask.NameToLayer("UI");
@@ -98,20 +101,51 @@ public class TimerDisplay
         text.font = theFont;
         text.fontSize = fontSize;
         text.fontStyle = FontStyle.Normal;
-        text.alignment = TextAnchor.UpperRight;
 
         textObject.transform.SetParent(canvas.transform, false);
 
-        textTransform.anchorMax = anchorMax;
-        textTransform.anchorMin = anchorMin;
+
+        updateTextPos(text, position);
 
         return text;
     }
 
-    private void updateTextAnchorMin(Text t, Vector2 anchorMax)
+    private void updateTextPos(Text t, Vector2 position)
     {
         RectTransform transform = t.gameObject.GetComponent<RectTransform>();
-        transform.anchorMax = anchorMax;
+
+
+        // 4 combinations, there probably exists a better way but it is alright
+        if (position.y > 0.5f)
+        {
+            if (position.x > 0.5f)
+            {
+                t.alignment = TextAnchor.UpperRight;
+                transform.anchorMin = new Vector2(0f, 0f);
+                transform.anchorMax = position;
+            }
+            else
+            {
+                t.alignment = TextAnchor.UpperLeft;
+                transform.anchorMin = new Vector2(position.x, 0f);
+                transform.anchorMax = new Vector2(1f, position.y);
+            }
+        }
+        else
+        {
+            if (position.x > 0.5f)
+            {
+                t.alignment = TextAnchor.LowerRight;
+                transform.anchorMin = new Vector2(0f, position.y);
+                transform.anchorMax = new Vector2(position.x, 1f);
+            }
+            else
+            {
+                t.alignment = TextAnchor.LowerLeft;
+                transform.anchorMin = position;
+                transform.anchorMax = new Vector2(1f, 1f);
+            }
+        }
     }
 
     public void toggleVisibility()
