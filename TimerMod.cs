@@ -64,6 +64,9 @@ public partial class TimerMod : BaseUnityPlugin
     private ConfigEntry<bool> showSpeed;
     private Vector2 startPos;
 
+    private ConfigEntry<Vector2> startTriggerSize;
+    private ConfigEntry<Vector2> endTriggerSize;
+
     private bool ShouldTickTimer()
     {
         if (timerPaused)
@@ -195,7 +198,7 @@ public partial class TimerMod : BaseUnityPlugin
             else
             {
                 startTrigger = new Triggers.CollisionTrigger(GameManager.instance.hero_ctrl.transform.position,
-                        new Vector2(0.35f, 0.35f), new Color(0.1f, 0.4f, 0.1f));
+                        startTriggerSize.Value, new Color(0.1f, 0.4f, 0.1f));
                 Logger.LogInfo("Set start pos");
             }
         }
@@ -212,7 +215,7 @@ public partial class TimerMod : BaseUnityPlugin
             else
             {
                 endTrigger = new Triggers.CollisionTrigger(GameManager.instance.hero_ctrl.transform.position,
-                        new Vector2(0.35f, 0.35f), new Color(0.4f, 0.1f, 0.1f));
+                        endTriggerSize.Value, new Color(0.4f, 0.1f, 0.1f));
                 Logger.LogInfo("Set end pos");
             }
         }
@@ -269,6 +272,9 @@ public partial class TimerMod : BaseUnityPlugin
         config = Config;
 
         showSpeed = Config.Bind("UI", "Show Speed", false, "");
+        startTriggerSize = Config.Bind("Triggers", "Start (collision) trigger size", new Vector2(0.35f, 0.35f), "");
+        endTriggerSize = Config.Bind("Triggers", "End (collision) trigger size", new Vector2(0.35f, 0.35f), "");
+
         Logger.LogInfo($"Plugin {Name} ({Id}) has loaded!");
     }
 }
