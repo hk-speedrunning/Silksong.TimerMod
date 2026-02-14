@@ -40,9 +40,6 @@ public partial class TimerMod : BaseUnityPlugin
 
     private TimerDisplay timerDisplay;
 
-    private const string MENU_TITLE = "Menu_Title";
-    private const string QUIT_TO_MENU = "Quit_To_Menu";
-
     private Triggers.Trigger startTrigger = new Triggers.SceneTrigger("");
     private Triggers.Trigger endTrigger = new Triggers.SceneTrigger("");
 
@@ -51,9 +48,6 @@ public partial class TimerMod : BaseUnityPlugin
     private double time = 0.0;
 
     private bool timerPaused = true;
-
-    private GameState prevGameState = GameState.PLAYING;
-    private bool lookForTele = false;
 
     private double[] history = new double[5];
     private int history_num = 0;
@@ -64,76 +58,13 @@ public partial class TimerMod : BaseUnityPlugin
     private ConfigEntry<bool> showSpeed;
     private Vector2 startPos;
 
-    private bool ShouldTickTimer()
-    {
-        if (timerPaused)
-        {
-            return false;
-        }
-
-        UIState ui_state = GameManager.instance.ui.uiState;
-        string scene_name = GameManager.instance.GetSceneNameString();
-        string next_scene = GameManager.instance.nextSceneName;
-
-        bool loading_menu = (scene_name != MENU_TITLE && next_scene == "")
-            || (scene_name != MENU_TITLE && next_scene == MENU_TITLE || scene_name == QUIT_TO_MENU);
-
-        GameState game_state = GameManager.instance.GameState;
-
-
-        if (game_state == GameState.PLAYING && prevGameState == GameState.MAIN_MENU)
-        {
-            lookForTele = true;
-        }
-
-        if (lookForTele && (game_state != GameState.PLAYING && game_state != GameState.ENTERING_LEVEL))
-        {
-            lookForTele = false;
-        }
-
-        bool accepting_input = GameManager.instance.inputHandler.acceptingInput;
-        HeroTransitionState hero_transition_state;
-        try
-        {
-            hero_transition_state = GameManager.instance.hero_ctrl.transitionState;
-        }
-        catch (Exception e)
-        {
-            hero_transition_state = HeroTransitionState.WAITING_TO_TRANSITION;
-        }
-
-        bool scene_load_activation_allowed = false;
-        if (GameManager.instance.sceneLoad != null)
-        {
-            scene_load_activation_allowed = GameManager.instance.sceneLoad.IsActivationAllowed;
-        }
-
-        // big thing
-        bool r0 = (lookForTele);
-        bool r1 = ((game_state == GameState.PLAYING || game_state == GameState.ENTERING_LEVEL)
-                    && ui_state != UIState.PLAYING);
-        bool r2 = (game_state != GameState.PLAYING && game_state != GameState.CUTSCENE && !accepting_input);
-        bool r3 = ((game_state == GameState.EXITING_LEVEL && scene_load_activation_allowed)
-                    || game_state == GameState.LOADING);
-        bool r4 = (hero_transition_state == HeroTransitionState.WAITING_TO_ENTER_LEVEL);
-        bool r5 = (ui_state != UIState.PLAYING
-                    && (loading_menu
-                        || (ui_state != UIState.PAUSED && ui_state != UIState.CUTSCENE && !(next_scene == "")))
-                    && next_scene != scene_name);
-
-        bool is_game_time_paused = r0 || r1 || r2 || r3 || r4 || r5;
-        if (is_game_time_paused)
-        {
-            // Logger.LogInfo($"{r0}{r1}{r2}{r3}{r4}{r5} {next_scene}");
-        }
-
-        prevGameState = game_state;
-        return !is_game_time_paused;
-    }
+    private ConfigEntry<Vector2> startTriggerSize;
+    private ConfigEntry<Vector2> endTriggerSize;
 
     private void resetPb()
     {
         pb = 0;
+
         timerDisplay.setPbTime(getTimeText(pb));
     }
 
@@ -147,17 +78,16 @@ public partial class TimerMod : BaseUnityPlugin
         history_num += 1;
         history_num %= 5;
 
-        // Logger.LogInfo($"Timed: {getTimeText(time)}");
+        timerPaused = true;
+
         if (pb == 0 || time < pb)
         {
             pb = time;
-            // Logger.LogInfo($"Got a pb: {getTimeText(time)}");
 
             timerDisplay.setPbTime(getTimeText(pb));
             if (showSpeed.Value)
                 timerDisplay.setPbTime($"{getTimeText(pb)}\n{speedx:0.00} u/s, {speedy:0.00} u/s");
         }
-        timerPaused = true;
     }
 
     private void startTimer()
@@ -173,14 +103,29 @@ public partial class TimerMod : BaseUnityPlugin
     private void LateUpdate()
     {
         if (startTrigger.active() && timerPaused)
-        {
             startTimer();
-        }
 
         if (endTrigger.active() && !timerPaused)
-        {
             endTimer();
+
+        if (keybinds.ToggleTriggerMethod.Value.IsDown())
+            usingSceneTriggers = !usingSceneTriggers;
+
+        if (keybinds.CancelTimer.Value.IsDown())
+        {
+            Logger.LogInfo("Canceled");
+            time = 0;
+            timerPaused = true;
         }
+
+        if (keybinds.ResetPb.Value.IsDown())
+            resetPb();
+        if (keybinds.StartTimer.Value.IsDown())
+            startTimer();
+        if (keybinds.EndTimer.Value.IsDown())
+            endTimer();
+        if (keybinds.ToggleTimerVisibility.Value.IsDown())
+            timerDisplay.toggleVisibility();
 
         if (keybinds.SetStart.Value.IsDown())
         {
@@ -195,7 +140,7 @@ public partial class TimerMod : BaseUnityPlugin
             else
             {
                 startTrigger = new Triggers.CollisionTrigger(GameManager.instance.hero_ctrl.transform.position,
-                        new Vector2(0.35f, 0.35f), new Color(0.1f, 0.4f, 0.1f));
+                        startTriggerSize.Value, new Color(0.1f, 0.4f, 0.1f));
                 Logger.LogInfo("Set start pos");
             }
         }
@@ -212,31 +157,13 @@ public partial class TimerMod : BaseUnityPlugin
             else
             {
                 endTrigger = new Triggers.CollisionTrigger(GameManager.instance.hero_ctrl.transform.position,
-                        new Vector2(0.35f, 0.35f), new Color(0.4f, 0.1f, 0.1f));
+                        endTriggerSize.Value, new Color(0.4f, 0.1f, 0.1f));
                 Logger.LogInfo("Set end pos");
             }
         }
 
-        if (keybinds.ToggleTriggerMethod.Value.IsDown())
-        {
-            usingSceneTriggers = !usingSceneTriggers;
-        }
-        if (keybinds.CancelTimer.Value.IsDown())
-        {
-            Logger.LogInfo("Canceled");
-            time = 0;
-            timerPaused = true;
-        }
-        if (keybinds.ResetPb.Value.IsDown())
-            resetPb();
-        if (keybinds.StartTimer.Value.IsDown())
-            startTimer();
-        if (keybinds.EndTimer.Value.IsDown())
-            endTimer();
-        if (keybinds.ToggleTimerVisibility.Value.IsDown())
-            timerDisplay.toggleVisibility();
 
-        if (ShouldTickTimer())
+        if (!timerPaused && LoadRemover.shouldTick())
         {
             time += Time.unscaledDeltaTime;
             // Logger.LogInfo(getTimeText(time));
@@ -248,7 +175,10 @@ public partial class TimerMod : BaseUnityPlugin
     public void onActiveSceneChanged(Scene from, Scene to)
     {
         if (funSceneCount == 3)
-            timerDisplay = new TimerDisplay();
+        {
+            Logger.LogInfo("Setting up timer display");
+            timerDisplay.setup();
+        }
 
         funSceneCount++;
     }
@@ -264,11 +194,16 @@ public partial class TimerMod : BaseUnityPlugin
 
     private void Awake()
     {
-        SceneManager.activeSceneChanged += onActiveSceneChanged;
-        keybinds = new Keybinds(Config);
         config = Config;
+        SceneManager.activeSceneChanged += onActiveSceneChanged;
+
+        keybinds = new Keybinds(Config);
+        timerDisplay = new TimerDisplay();
 
         showSpeed = Config.Bind("UI", "Show Speed", false, "");
+        startTriggerSize = Config.Bind("Triggers", "Start (collision) trigger size", new Vector2(0.35f, 0.35f), "");
+        endTriggerSize = Config.Bind("Triggers", "End (collision) trigger size", new Vector2(0.35f, 0.35f), "");
+
         Logger.LogInfo($"Plugin {Name} ({Id}) has loaded!");
     }
 }
