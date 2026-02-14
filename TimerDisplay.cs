@@ -11,9 +11,9 @@ public class TimerDisplay
 {
     private GameObject canvas;
 
-    private Text text;
-    private Text pbText;
-    private Font theFont;
+    private Text? text;
+    private Text? pbText;
+    private Font? theFont;
 
     private bool timerVisible = true;
 
@@ -25,12 +25,27 @@ public class TimerDisplay
 
     public TimerDisplay()
     {
+        ConfigFile config = TimerMod.config;
+        timerTextSize = config.Bind("UI", "Timer Text Size", 50, "");
+        pbTextSize = config.Bind("UI", "Pb Text Size", 25, "");
+        timerTextPos = config.Bind("UI", "Timer Text Position", new Vector2(0.03f, 0.04f), "");
+        pbTextPos = config.Bind("UI", "Pb Text Position", new Vector2(0.03f, 0.09f), "");
+
+        timerTextSize.SettingChanged += (_, _) => {setAllConfigs();};
+        pbTextSize.SettingChanged += (_, _) => {setAllConfigs();};
+        timerTextPos.SettingChanged += (_, _) => {setAllConfigs();};
+        pbTextPos.SettingChanged += (_, _) => {setAllConfigs();};
+
+        canvas = new GameObject("TimerModCanvas");
+        UnityEngine.Object.DontDestroyOnLoad(canvas);
+    }
+
+    public void setup()
+    {
         var allFonts = Resources.FindObjectsOfTypeAll<Font>();
         theFont = allFonts.FirstOrDefault(x => x.name == "TrajanPro-Regular");
 
         setupCanvas();
-
-        setupConfig();
 
         text = createText("TimerText", "0:00.00", timerTextSize.Value, timerTextPos.Value);
         pbText = createText("TimerPBText", "PB: 0:00.00", pbTextSize.Value, pbTextPos.Value);
@@ -38,33 +53,19 @@ public class TimerDisplay
 
     private void setAllConfigs()
     {
-        text.fontSize = timerTextSize.Value;
-        pbText.fontSize = pbTextSize.Value;
-
         if (text == null || pbText == null)
             return;
+
+        text.fontSize = timerTextSize.Value;
+        pbText.fontSize = pbTextSize.Value;
 
         updateTextPos(text, timerTextPos.Value);
         updateTextPos(pbText, pbTextPos.Value);
     }
 
-    private void setupConfig()
-    {
-        ConfigFile config = TimerMod.config;
-        timerTextSize = config.Bind("UI", "Timer Text Size", 50, "");
-        pbTextSize = config.Bind("UI", "Pb Text Size", 25, "");
-        timerTextPos = config.Bind("UI", "Timer Text Position", new Vector2(0.07f, 0.00f), "");
-        pbTextPos = config.Bind("UI", "Pb Text Position", new Vector2(0.05f, 0.04f), "");
-
-        timerTextSize.SettingChanged += (_, _) => {setAllConfigs();};
-        pbTextSize.SettingChanged += (_, _) => {setAllConfigs();};
-        timerTextPos.SettingChanged += (_, _) => {setAllConfigs();};
-        pbTextPos.SettingChanged += (_, _) => {setAllConfigs();};
-    }
 
     private void setupCanvas()
     {
-        canvas = new GameObject("TimerModCanvas");
         var canvasC = canvas.AddComponent<UnityEngine.Canvas>();
         canvasC.renderMode = RenderMode.ScreenSpaceOverlay;
         // canvasC.worldCamera = GameCameras.SilentInstance.hudCamera;
@@ -80,8 +81,6 @@ public class TimerDisplay
         canvasRect.anchorMin = new Vector2(0, 0);
         canvasRect.anchorMax = new Vector2(1, 1);
         canvasRect.sizeDelta = new Vector2(0, 0);
-
-        UnityEngine.Object.DontDestroyOnLoad(canvas);
     }
 
     public Text createText(string name, string defaultText, int fontSize, Vector2 position)
@@ -103,7 +102,6 @@ public class TimerDisplay
         text.fontStyle = FontStyle.Normal;
 
         textObject.transform.SetParent(canvas.transform, false);
-
 
         updateTextPos(text, position);
 
@@ -157,11 +155,17 @@ public class TimerDisplay
 
     public void setTime(string time)
     {
+        if (text == null)
+            return;
+
         text.text = time;
     }
 
     public void setPbTime(string time)
     {
+        if (pbText == null)
+            return;
+
         pbText.text = "PB: " + time;
     }
 }

@@ -10,6 +10,7 @@ public class SceneTrigger : Trigger
     public SceneTrigger(string scene)
     {
         targetSceneName = scene;
+        prevSceneName = "";
     }
 
     public bool active()
