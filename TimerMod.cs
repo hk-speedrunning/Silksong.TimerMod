@@ -102,6 +102,9 @@ public partial class TimerMod : BaseUnityPlugin
 
     private void LateUpdate()
     {
+        if (funSceneCount != 4)
+            return;
+
         if (startTrigger.active() && timerPaused)
             startTimer();
 
@@ -174,13 +177,15 @@ public partial class TimerMod : BaseUnityPlugin
 
     public void onActiveSceneChanged(Scene from, Scene to)
     {
-        if (funSceneCount == 3)
+        funSceneCount += 1;
+
+        Logger.LogInfo($"Start2 aaa timermod is going a {funSceneCount}");
+        if (funSceneCount == 4)
         {
             Logger.LogInfo("Setting up timer display");
             timerDisplay.setup();
+            SceneManager.activeSceneChanged -= onActiveSceneChanged;
         }
-
-        funSceneCount++;
     }
 
     private string getTimeText(double t)
